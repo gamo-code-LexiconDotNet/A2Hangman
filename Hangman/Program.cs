@@ -1,4 +1,5 @@
 ﻿using System;
+using static System.Console;
 
 namespace Hangman
 {
@@ -6,7 +7,11 @@ namespace Hangman
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            do
+            {
+                Hangman.Play();
+                Write("\n\tDo you want to play again (y/n)?: ");
+            } while (ReadLine().ToString().ToLower().StartsWith("y"));
         }
     }
 }
