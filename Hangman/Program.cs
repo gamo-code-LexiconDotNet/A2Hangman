@@ -11,7 +11,7 @@ namespace Hangman
             {
                 Hangman.Play();
                 Write("\n\tDo you want to play again (y/n)?: ");
-            } while (ReadLine().ToString().ToLower().StartsWith("y"));
+            } while (ReadLine().ToString().ToLower().Equals("y"));
         }
     }
 }

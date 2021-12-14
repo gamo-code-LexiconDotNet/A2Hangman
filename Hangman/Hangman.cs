@@ -9,11 +9,6 @@ namespace Hangman
 {
     public class Hangman
     {
-        static Hangman()
-        {
-            InitializeDrawHangman();
-        }
-
         public static void Play()
         {
             StringBuilder incorrectGuesses = new StringBuilder();
@@ -22,15 +17,33 @@ namespace Hangman
             string secretWord = PickSecretFromList(wordList);
             char[] correctGuesses = 
                 Enumerable.Repeat('_', secretWord.Length).ToArray();
-            string guess = "";
 
+            // game loop
             while (lives > 0)
             {
                 PrintProgress(lives, correctGuesses, incorrectGuesses);
+                Write("Guess a letter or a word (0 to quit, ? for hint): ");
+                string guess = ReadLine().ToLower();
 
-                Write("Guess a letter or a word: ");
-                guess = ReadLine().ToLower();
+                // special or incorrect input handling
+                if (guess.Equals("0"))
+                {
+                    PrintProgress(lives, correctGuesses, incorrectGuesses);
+                    return;
+                }
+                else if (guess.Equals("?"))
+                {
+                    PrintProgress(lives, correctGuesses, incorrectGuesses);
+                    if (AskConfirmation("Are you sure you want a hint, " +
+                        "it will cost you 2 lifes? (y/n): "))
+                        guess = GetHint(secretWord, correctGuesses, ref lives);
+                    else
+                        continue;
+                }
+                else if (int.TryParse(guess, out _))
+                    continue;
 
+                // game logic
                 if (guess.Length > 1)
                 {
                     if (guess.Equals(secretWord))
@@ -38,8 +51,14 @@ namespace Hangman
                         correctGuesses = secretWord.ToCharArray();
                         break;
                     }
-                    else
+                    else if(!CommaSeparatedStringContains(
+                        incorrectGuesses.ToString(), guess))
+                    {
+                        incorrectGuesses.Append(
+                                (incorrectGuesses.Length > 0 ? ", " : "")
+                                + guess);
                         lives--;
+                    }
                 }
                 else
                 {
@@ -53,7 +72,8 @@ namespace Hangman
 
                     if (!correctGuess)
                     {
-                        if (!incorrectGuesses.ToString().Contains(guess))
+                        if (!CommaSeparatedStringContains(
+                            incorrectGuesses.ToString(), guess))
                         {
                             incorrectGuesses.Append(
                                 (incorrectGuesses.Length > 0 ? ", " : "")
@@ -67,11 +87,42 @@ namespace Hangman
                     break;
             }
 
+            // end of game summary
             PrintProgress(lives, correctGuesses, incorrectGuesses);
             if (lives > 0)
                 WriteLine("You Win.");
             else
                 WriteLine("You Loose. (The word was \"{0}\").", secretWord);
+        }
+
+        private static bool AskConfirmation(string message = "Confirm? (y/n): ")
+        {
+            Write(message);
+            return ReadLine().ToString().ToLower().Equals("y");
+        }
+
+        private static bool CommaSeparatedStringContains(string a, string b)
+        {
+            string[] aa = a.Split(",");
+            for (int i = 0; i < aa.Length; i++)
+                if (aa[i].Equals(b))
+                    return true;
+            return false;
+        }
+
+        private static string GetHint(
+            string secretWord, 
+            char[] correctGuesses,
+            ref int lives)
+        {
+            for (int i = 0; i < secretWord.Length; i++)
+                if (!correctGuesses.Contains(secretWord[i]))
+                {
+                    lives -= 2;
+                    return secretWord[i].ToString();
+                }
+
+            return "";
         }
 
         private static void PrintProgress(
@@ -81,35 +132,22 @@ namespace Hangman
         {
             Clear();
             WriteLine("Play Hangman\n");
-            DrawHangman(lives);
+            Write(DrawHangman(lives));
             WriteLine($"You have {lives} lives left.\n");
             WriteLine($"{string.Join(" ", correctGuesses)}\n");
             WriteLine("Guessed wrong so far: {0}\n", 
                 incorrectGuesses.ToString());
         }
 
-        private static void InitializeDrawHangman()
+        private static string DrawHangman(int lives)
         {
-            //       0    1    2    3    4    5    6    7    8    9    10
-            //  0 { ' ', ' ', ' ', '-', '-', '-', '-', '-', ' ', ' ', '\n' } 0, 11
-            // 12 { ' ', ' ', ' ', '|', ' ', ' ', '\', '|', ' ', ' ', '\n' } 1, 22
-            // 23 { ' ', ' ', ' ', 'O', ' ', ' ', ' ', '|', ' ', ' ', '\n' } 2, 33
-            // 34 { ' ', ' ', '/', '|', '\', ' ', ' ', '|', ' ', ' ', '\n' } 3, 44
-            // 45 { ' ', ' ', '/', ' ', '\', ' ', ' ', '|', ' ', ' ', '\n' } 4, 55
-            // 56 { ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|', ' ', ' ', '\n' } 5, 66
-            // 67 { '~', '~', '~', '~', '~', '~', '~', '~', '~', '~', '\n' } 6, 77
-            //       1    2    3    4    5    6    7    8    9    10   11
-
-            hanging = new StringBuilder();
+            StringBuilder hanging = new StringBuilder();
             hanging.Append(new String(' ', 66));
             hanging.Append(new String('~', 11));
 
             for (int i = 10; i < hanging.Length; i += 11)
                 hanging[i] = '\n';
-        }
 
-        private static void DrawHangman(int lives)
-        {
             if (lives < 1) hanging[48] = '\\';
             if (lives < 2) hanging[46] = '/';
             if (lives < 3) hanging[37] = '\\';
@@ -135,7 +173,7 @@ namespace Hangman
                 hanging[62] = '|';
             }
 
-            WriteLine(hanging.ToString());
+            return hanging.ToString();
         }
 
         private static string PickSecretFromList(string[] wordlist)
@@ -175,7 +213,6 @@ namespace Hangman
             return new string[] { word.ToString() };
         }
 
-        private static StringBuilder hanging;
         private static readonly string path = 
             Environment.CurrentDirectory + "\\wordlist.txt";
         private static readonly Random random = new Random();
