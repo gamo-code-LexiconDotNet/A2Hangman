@@ -9,12 +9,19 @@ namespace Hangman
 {
     public class Hangman
     {
+        static Hangman()
+        {
+            InitializeDrawHangman();
+        }
+
         public static void Play()
         {
             StringBuilder incorrectGuesses = new StringBuilder();
             int lives = 10;
-            string secretWord = PickSecretFromList(ReadWordFromFile(path));
-            char[] correctGuesses = Enumerable.Repeat('_', secretWord.Length).ToArray();
+            string[] wordList = ReadWordFromFile(path);
+            string secretWord = PickSecretFromList(wordList);
+            char[] correctGuesses = 
+                Enumerable.Repeat('_', secretWord.Length).ToArray();
             string guess = "";
 
             while (lives > 0)
@@ -48,7 +55,9 @@ namespace Hangman
                     {
                         if (!incorrectGuesses.ToString().Contains(guess))
                         {
-                            incorrectGuesses.Append(guess);
+                            incorrectGuesses.Append(
+                                (incorrectGuesses.Length > 0 ? ", " : "")
+                                + guess);
                             lives--;
                         }
                     }
@@ -62,7 +71,7 @@ namespace Hangman
             if (lives > 0)
                 WriteLine("You Win.");
             else
-                WriteLine("You Loose.");
+                WriteLine("You Loose. (The word was \"{0}\").", secretWord);
         }
 
         private static void PrintProgress(
@@ -72,74 +81,61 @@ namespace Hangman
         {
             Clear();
             WriteLine("Play Hangman\n");
-            Write(DrawHangman(lives));
+            DrawHangman(lives);
             WriteLine($"You have {lives} lives left.\n");
             WriteLine($"{string.Join(" ", correctGuesses)}\n");
-            WriteLine("Guessed wrong so far: {0}\n",
-                string.Join(", ", incorrectGuesses.ToString().ToArray()));
+            WriteLine("Guessed wrong so far: {0}\n", 
+                incorrectGuesses.ToString());
         }
 
-        /**
-         * 
-         */
-        private static string DrawHangman(int lives)
+        private static void InitializeDrawHangman()
         {
-            //    0    1    2    3    4    5    6    7    8    9    10
-            // { ' ', ' ', ' ', '-', '-', '-', '-', '-', ' ', ' ', '\n' } 0
-            // { ' ', ' ', ' ', '|', ' ', ' ', '\', '|', ' ', ' ', '\n' } 1 
-            // { ' ', ' ', ' ', 'O', ' ', ' ', ' ', '|', ' ', ' ', '\n' } 2
-            // { ' ', ' ', '/', '|', '\', ' ', ' ', '|', ' ', ' ', '\n' } 3
-            // { ' ', ' ', '/', ' ', '\', ' ', ' ', '|', ' ', ' ', '\n' } 4
-            // { ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|', ' ', ' ', '\n' } 5
-            // { '~', '~', '~', '~', '~', '~', '~', '~', '~', '~', '\n' } 6
+            //       0    1    2    3    4    5    6    7    8    9    10
+            //  0 { ' ', ' ', ' ', '-', '-', '-', '-', '-', ' ', ' ', '\n' } 0, 11
+            // 12 { ' ', ' ', ' ', '|', ' ', ' ', '\', '|', ' ', ' ', '\n' } 1, 22
+            // 23 { ' ', ' ', ' ', 'O', ' ', ' ', ' ', '|', ' ', ' ', '\n' } 2, 33
+            // 34 { ' ', ' ', '/', '|', '\', ' ', ' ', '|', ' ', ' ', '\n' } 3, 44
+            // 45 { ' ', ' ', '/', ' ', '\', ' ', ' ', '|', ' ', ' ', '\n' } 4, 55
+            // 56 { ' ', ' ', ' ', ' ', ' ', ' ', ' ', '|', ' ', ' ', '\n' } 5, 66
+            // 67 { '~', '~', '~', '~', '~', '~', '~', '~', '~', '~', '\n' } 6, 77
+            //       1    2    3    4    5    6    7    8    9    10   11
 
-            StringBuilder sb = new StringBuilder();
-            sb.Append(new String(' ', 66));
-            sb.Append(new String('~', 11));
+            hanging = new StringBuilder();
+            hanging.Append(new String(' ', 66));
+            hanging.Append(new String('~', 11));
 
-            for (int i = 10; i < sb.Length; i += 11)
-            {
-                sb[i] = '\n';
-            }
+            for (int i = 10; i < hanging.Length; i += 11)
+                hanging[i] = '\n';
+        }
 
-            char[] a1 = sb.ToString().ToArray();
-            char[,] hanging = new char[7, 11];
-            Buffer.BlockCopy(
-                a1, 0, 
-                hanging, 0, 
-                77 * sizeof(char));
-
-            //for (int i = 0; i < hanging.GetLength(0); i++)
-            //{
-            //    hanging[i, 10] = '\n';
-            //}
-
-            if (lives < 1) hanging[4, 4] = '\\';
-            if (lives < 2) hanging[4, 2] = '/';
-            if (lives < 3) hanging[3, 4] = '\\';
-            if (lives < 4) hanging[3, 2] = '/';
-            if (lives < 5) hanging[3, 3] = '|';
-            if (lives < 6) hanging[2, 3] = 'O';
-            if (lives < 7) hanging[1, 3] = '|';
+        private static void DrawHangman(int lives)
+        {
+            if (lives < 1) hanging[48] = '\\';
+            if (lives < 2) hanging[46] = '/';
+            if (lives < 3) hanging[37] = '\\';
+            if (lives < 4) hanging[35] = '/';
+            if (lives < 5) hanging[36] = '|';
+            if (lives < 6) hanging[25] = 'O';
+            if (lives < 7) hanging[14] = '|';
             if (lives < 8)
             {
-                hanging[0, 3] = '_';
-                hanging[0, 4] = '_';
-                hanging[0, 5] = '_';
-                hanging[0, 6] = '_';
-                hanging[0, 7] = '_';
+                hanging[3] = '_';
+                hanging[4] = '_';
+                hanging[5] = '_';
+                hanging[6] = '_';
+                hanging[7] = '_';
             }
-            if (lives < 9) hanging[1, 6] = '\\';
+            if (lives < 9) hanging[17] = '\\';
             if (lives < 10)
             {
-                hanging[1, 7] = '|';
-                hanging[2, 7] = '|';
-                hanging[3, 7] = '|';
-                hanging[4, 7] = '|';
-                hanging[5, 7] = '|';
+                hanging[18] = '|';
+                hanging[29] = '|';
+                hanging[40] = '|';
+                hanging[51] = '|';
+                hanging[62] = '|';
             }
 
-            return String.Join("", hanging.Cast<char>().ToArray()).ToString();
+            WriteLine(hanging.ToString());
         }
 
         private static string PickSecretFromList(string[] wordlist)
@@ -147,34 +143,29 @@ namespace Hangman
             return wordlist[random.Next(0, wordlist.Length)];
         }
 
-        /**
-         * Read a word from a comma separated text file.
-         */
         private static string[] ReadWordFromFile(string path)
         {
             StringBuilder word = new StringBuilder();
             
             try
             {
-                using (StreamReader sr = new StreamReader(path))
-                {
-                    long streamSize = sr.BaseStream.Length;
-                    int offset = random.Next(0, (int)streamSize);
-                    
-                    // seek to random offset
-                    sr.BaseStream.Seek(offset, SeekOrigin.Begin);
+                using StreamReader sr = new StreamReader(path);
+                long streamSize = sr.BaseStream.Length;
+                int offset = random.Next(0, (int)streamSize);
 
-                    // go to next comma
-                    while (!sr.EndOfStream && (char)sr.Read() != ',') {  }
+                // seek to random offset
+                sr.BaseStream.Seek(offset, SeekOrigin.Begin);
 
-                    // if eos, go to beginning of stream (first word)
-                    if (sr.EndOfStream)
-                        sr.BaseStream.Seek(0, SeekOrigin.Begin);
+                // go to next comma
+                while (!sr.EndOfStream && (char)sr.Read() != ',') { }
 
-                    // read characters until next comma
-                    while (!sr.EndOfStream && (char)sr.Peek() != ',')
-                        word.Append((char)sr.Read());
-                }
+                // if eos, go to beginning of stream (first word)
+                if (sr.EndOfStream)
+                    sr.BaseStream.Seek(0, SeekOrigin.Begin);
+
+                // read characters until next comma
+                while (!sr.EndOfStream && (char)sr.Peek() != ',')
+                    word.Append((char)sr.Read());
             }
             catch (Exception ex)
             {
@@ -184,7 +175,9 @@ namespace Hangman
             return new string[] { word.ToString() };
         }
 
-        private static readonly string path = Environment.CurrentDirectory + "\\wordlist.txt";
+        private static StringBuilder hanging;
+        private static readonly string path = 
+            Environment.CurrentDirectory + "\\wordlist.txt";
         private static readonly Random random = new Random();
     }
 }
