@@ -3,7 +3,7 @@ using static System.Console;
 
 namespace Hangman
 {
-    internal class Program
+    public class Program
     {
         static void Main(string[] args)
         {

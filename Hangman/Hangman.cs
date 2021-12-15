@@ -1,21 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using static System.Console;
 
 namespace Hangman
 {
-    public class Hangman
+    public static partial class Hangman
     {
         public static void Play()
         {
             StringBuilder incorrectGuesses = new StringBuilder();
             int lives = 10;
-            string[] wordList = ReadWordFromFile(path);
-            string secretWord = PickSecretFromList(wordList);
-            char[] correctGuesses = 
+            string[] wordList = new string[] { ReadWordFromFile(path) };
+            string secretWord = PickFromList(wordList);
+            char[] correctGuesses =
                 Enumerable.Repeat('_', secretWord.Length).ToArray();
 
             // game loop
@@ -51,7 +49,7 @@ namespace Hangman
                         correctGuesses = secretWord.ToCharArray();
                         break;
                     }
-                    else if(!CommaSeparatedStringContains(
+                    else if (!CommaSeparatedStringContains(
                         incorrectGuesses.ToString(), guess))
                     {
                         incorrectGuesses.Append(
@@ -93,21 +91,6 @@ namespace Hangman
                 WriteLine("You Win.");
             else
                 WriteLine("You Loose. (The word was \"{0}\").", secretWord);
-        }
-
-        private static bool AskConfirmation(string message = "Confirm? (y/n): ")
-        {
-            Write(message);
-            return ReadLine().ToString().ToLower().Equals("y");
-        }
-
-        private static bool CommaSeparatedStringContains(string a, string b)
-        {
-            string[] aa = a.Split(",");
-            for (int i = 0; i < aa.Length; i++)
-                if (aa[i].Equals(b))
-                    return true;
-            return false;
         }
 
         private static string GetHint(
@@ -175,46 +158,5 @@ namespace Hangman
 
             return hanging.ToString();
         }
-
-        private static string PickSecretFromList(string[] wordlist)
-        {
-            return wordlist[random.Next(0, wordlist.Length)];
-        }
-
-        private static string[] ReadWordFromFile(string path)
-        {
-            StringBuilder word = new StringBuilder();
-            
-            try
-            {
-                using StreamReader sr = new StreamReader(path);
-                long streamSize = sr.BaseStream.Length;
-                int offset = random.Next(0, (int)streamSize);
-
-                // seek to random offset
-                sr.BaseStream.Seek(offset, SeekOrigin.Begin);
-
-                // go to next comma
-                while (!sr.EndOfStream && (char)sr.Read() != ',') { }
-
-                // if eos, go to beginning of stream (first word)
-                if (sr.EndOfStream)
-                    sr.BaseStream.Seek(0, SeekOrigin.Begin);
-
-                // read characters until next comma
-                while (!sr.EndOfStream && (char)sr.Peek() != ',')
-                    word.Append((char)sr.Read());
-            }
-            catch (Exception ex)
-            {
-                Error.WriteLine(ex.Message);
-            }
-
-            return new string[] { word.ToString() };
-        }
-
-        private static readonly string path = 
-            Environment.CurrentDirectory + "\\wordlist.txt";
-        private static readonly Random random = new Random();
     }
 }
