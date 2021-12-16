@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using static System.Console;
 
 namespace Hangman
@@ -7,19 +8,15 @@ namespace Hangman
     {
         private static readonly Random random = new Random();
 
-        private static bool AskConfirmation(string message = "Confirm? (y/n): ")
+        private static bool AskConfirmation(string message = "Confirm? (y/n): ", string option = "y")
         {
             Write(message);
-            return ReadLine().ToString().ToLower().Equals("y");
+            return IsConfirmed(ReadLine().ToString(), option);
         }
 
-        private static bool CommaSeparatedStringContains(string csv, string str)
+        private static bool IsConfirmed(string response, string option)
         {
-            string[] csva = csv.Split(",");
-            for (int i = 0; i < csva.Length; i++)
-                if (csva[i].Equals(str))
-                    return true;
-            return false;
+            return response.ToLower().Equals(option);
         }
 
         private static string PickFromList(string[] wordList)

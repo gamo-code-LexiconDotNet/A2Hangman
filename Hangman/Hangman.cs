@@ -20,7 +20,7 @@ namespace Hangman
             while (lives > 0)
             {
                 PrintProgress(lives, correctGuesses, incorrectGuesses);
-                Write("Guess a letter or a word (0 to quit, ? for hint): ");
+                Write("Guess a letter or a word (0 to quit{0}: ", lives > 2 ? ", ? for hint)" : ")" );
                 string guess = ReadLine().ToLower();
 
                 // special or incorrect input handling
@@ -29,59 +29,21 @@ namespace Hangman
                     PrintProgress(lives, correctGuesses, incorrectGuesses);
                     return;
                 }
-                else if (guess.Equals("?"))
+                else if (guess.Equals("?") && lives > 2)
                 {
                     PrintProgress(lives, correctGuesses, incorrectGuesses);
+
                     if (AskConfirmation("Are you sure you want a hint, " +
                         "it will cost you 2 lifes? (y/n): "))
                         guess = GetHint(secretWord, correctGuesses, ref lives);
                     else
                         continue;
                 }
-                else if (int.TryParse(guess, out _))
+                else if (!guess.All(char.IsLetter))
                     continue;
 
-                // game logic
-                if (guess.Length > 1)
-                {
-                    if (guess.Equals(secretWord))
-                    {
-                        correctGuesses = secretWord.ToCharArray();
-                        break;
-                    }
-                    else if (!CommaSeparatedStringContains(
-                        incorrectGuesses.ToString(), guess))
-                    {
-                        incorrectGuesses.Append(
-                                (incorrectGuesses.Length > 0 ? ", " : "")
-                                + guess);
-                        lives--;
-                    }
-                }
-                else
-                {
-                    bool correctGuess = false;
-                    for (int i = 0; i < secretWord.Length; i++)
-                        if (secretWord[i].ToString().Equals(guess))
-                        {
-                            correctGuesses[i] = secretWord[i];
-                            correctGuess = true;
-                        }
-
-                    if (!correctGuess)
-                    {
-                        if (!CommaSeparatedStringContains(
-                            incorrectGuesses.ToString(), guess))
-                        {
-                            incorrectGuesses.Append(
-                                (incorrectGuesses.Length > 0 ? ", " : "")
-                                + guess);
-                            lives--;
-                        }
-                    }
-                }
-
-                if (!string.Join("", correctGuesses).Contains("_"))
+                if (!GameLogic(guess, ref lives, secretWord,
+                               ref correctGuesses, ref incorrectGuesses))
                     break;
             }
 
@@ -91,6 +53,53 @@ namespace Hangman
                 WriteLine("You Win.");
             else
                 WriteLine("You Loose. (The word was \"{0}\").", secretWord);
+        }
+
+        private static bool GameLogic(
+            string guess, ref int lives, string secretWord, 
+            ref char[] correctGuesses, ref StringBuilder incorrectGuesses)
+         {
+            if (guess.Length > 1)
+            {
+                if (guess.Equals(secretWord))
+                {
+                    correctGuesses = secretWord.ToCharArray();
+                    return false;
+                }
+                else if (!incorrectGuesses.ToString().Split(',').Contains(guess))
+                {
+                    incorrectGuesses.Append(
+                            (incorrectGuesses.Length > 0 ? "," : "")
+                            + guess);
+                    lives--;
+                }
+            }
+            else
+            {
+                if (incorrectGuesses.ToString().Split(',').Contains(guess))
+                    return true;
+
+                bool correct = false;
+                for (int i = 0; i < secretWord.Length; i++)
+                    if (secretWord[i].ToString().Equals(guess))
+                    {
+                        correctGuesses[i] = secretWord[i];
+                        correct = true;
+                    }
+
+                if (!correct)
+                {
+                    incorrectGuesses.Append(
+                        (incorrectGuesses.Length > 0 ? "," : "")
+                        + guess);
+                    lives--;
+                }
+            }
+
+            if (!string.Join("", correctGuesses).Contains("_"))
+                return false;
+
+            return true;
         }
 
         private static string GetHint(
@@ -119,7 +128,7 @@ namespace Hangman
             WriteLine($"You have {lives} lives left.\n");
             WriteLine($"{string.Join(" ", correctGuesses)}\n");
             WriteLine("Guessed wrong so far: {0}\n", 
-                incorrectGuesses.ToString());
+                string.Join(", ", incorrectGuesses.ToString().Split(',')));
         }
 
         private static string DrawHangman(int lives)
