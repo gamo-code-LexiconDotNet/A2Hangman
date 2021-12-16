@@ -1,9 +1,8 @@
 using System;
-using System.Reflection;
-using Xunit;
 using System.IO;
+using System.Reflection;
 using System.Text;
-using System.Linq;
+using Xunit;
 
 namespace Hangman.Tests
 {
@@ -20,13 +19,13 @@ namespace Hangman.Tests
             // Assemble
             char[] correctGuesses = cG.ToCharArray();
             StringBuilder incorrectGuesses = new StringBuilder(iG);
-            object[] arguments = new object[] 
-            { 
+            object[] arguments = new object[]
+            {
                 guess,
                 lives,
                 secretWord,
                 correctGuesses,
-                incorrectGuesses, 
+                incorrectGuesses,
             };
 
             // Act
@@ -42,7 +41,7 @@ namespace Hangman.Tests
         [InlineData(10, "~ \n", true)]
         [InlineData(10, "~ O\n", false)]
         [InlineData(5, "~ |_\\O\n", true)]
-        public void DrawHangingMan(int lives, string tokens, bool expected) 
+        public void DrawHangingMan(int lives, string tokens, bool expected)
         {
             // Act
             string result = CallStaticPrivateMethod<string>(
